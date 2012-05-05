@@ -123,8 +123,12 @@ class GrabAndSave {
 			$fullpathfilename = $uploads['path'] . "/" . $filename;
 
 			try {
+				if ( empty($imageurl[$key]) ) {
+						throw new Exception('There is empty field.');
+				}
+				
 				if ( !substr_count($wp_filetype['type'], "image") ) {
-					throw new Exception( basename($imageurls) . ' is not a valid image. ' . $wp_filetype['type']  . '' );
+					throw new Exception( basename($imageurls) . ' is not a valid image ' . $wp_filetype['type']  . '' );
 				}
 
 				$image_string = $this->fetch_image($imageurls);
@@ -158,9 +162,10 @@ class GrabAndSave {
 		jQuery(document).ready(function($) {
 			var no = 1;
 			function addField(){
+				no++;
 				var newContent = "<tr>";
 					newContent += "<td>Image URL</td>";
-					newContent += "<td>: <input id=\"srcurl-"+ no +"\" type=\"text\" name=\"imageurl[]\" style=\"min-width:500px\"></td>";
+					newContent += "<td>: <input id=\"srcurl-"+ no +"\" class=\"autofield-"+ no +"\" type=\"text\" name=\"imageurl[]\" style=\"min-width:500px\"></td>";
 					newContent += "</tr>";
 					newContent += "<tr>";
 					newContent += "<td>Image Title</td>";
@@ -168,20 +173,25 @@ class GrabAndSave {
 					newContent += "</tr>";
 				$("#myfields").append(newContent);
 			 }
-			$('#add_field').click(function() {
-					no++;
+			$("#srcurl-1").change(function() {
+		    	var inputVal = $("#srcurl-1").val();
+				$("#srctit-1").val(inputVal.replace(/\\/g,'/').replace( /.*\//, '' ).split('.').reverse().slice(1).reverse().join('.').replace(/-/g, ' '));
+				$('.autofield-1').blur(function() {
+					$('#srcurl-1').trigger('addfield');
+				});
+			});
+			$('#srcurl-1').bind('addfield',function() {
 					addField();
-					$("#srcurl-"+no).change(function () {
+					$("#srcurl-"+no).change(function() {
 				    	var inputVal = $("#srcurl-"+no).val();
 						$("#srctit-"+no).val(inputVal.replace(/\\/g,'/').replace( /.*\//, '' ).split('.').reverse().slice(1).reverse().join('.').replace(/-/g, ' '));
 					});
-				});
+					$('.autofield-'+no).blur(function() {
+						$('#srcurl-1').trigger('addfield');
+					});
+			});
 			$('#button-upload').click(function() {
 					$('#spinner').show();
-				});
-			$("#srcurl-1").change(function () {
-		    	var inputVal = $("#srcurl-"+no).val();
-				$("#srctit-1").val(inputVal.replace(/\\/g,'/').replace( /.*\//, '' ).split('.').reverse().slice(1).reverse().join('.').replace(/-/g, ' '));
 			});
 		});
 		
@@ -194,21 +204,21 @@ class GrabAndSave {
 		<table id="myfields">
 			<tr>
 				<td>Image URL</td>
-				<td>: <input id="srcurl-1" type="text" name="imageurl[]" style="min-width: 500px"></td>
+				<td>: <input id="srcurl-1" class="autofield-1" type="text" name="imageurl[]" style="min-width: 500px"></td>
 			</tr>
 			<tr>
 				<td>Image Title</td>
 				<td>: <input id="srctit-1" type="text" name="imagetitle[]" style="min-width: 500px"></td>
 			</tr>
 		</table>
-		<input id="button-upload" type="submit" style="float:left" class="button" value="Sedot Ciin..">
-		<input id="add_field" type="button" class="button" value="Tambah sedotan =)"/>
+		<input id="button-upload" type="submit" class="button" value="Sedot Ciin..">
 		</form>
 	<?php
 	if ( !function_exists("curl_init") && !ini_get("allow_url_fopen") ) {
 		echo '<div id="message" class="error"><p><b>cURL</b> or <b>allow_url_fopen</b> needs to be enabled. Please consult your server Administrator.</p></div>';
-	} elseif ( $error ) {
+	} elseif ( $error && $fileSaved && $attach_id ) {
 		echo $error;
+		echo '<div id="message" class="updated"><p>'.count($attach_array).' Image saved.</p></div>';
 	} else {
 		if ( $fileSaved && $attach_id ) {
 			echo '<div id="message" class="updated"><p>'.count($attach_array).' Image saved.</p></div>';
