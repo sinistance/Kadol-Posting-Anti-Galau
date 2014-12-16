@@ -1,3 +1,3 @@
 README
 
-Wordpress Plugin buat sedot - sedotan =)
+Wordpress Plugin buat sedot - sedotan ;)
